@@ -1,6 +1,5 @@
 """
 :author: Mido Assran
-:date: Oct. 12, 2017
 """
 
 # BLAS computing
@@ -31,9 +30,11 @@ def gamutshow(img, save_fname_img="default_gamut.jpg"):
     ax.set_ylim(0, 255)
     ax.set_zlim(0, 255)
 
-    for pix_row in img:
-        for pix in pix_row:
-            ax.scatter(pix[0], pix[1], pix[2], c='k')
+    print(img.shape)
+    img = img.reshape(img.shape[0] * img.shape[1], img.shape[2])
+    # for pix_row in img:
+    #     for pix in pix_row:
+    ax.scatter(img[:,0], img[:,1], img[:,2], c='k')
 
     ax.set_xlabel('B Label')
     ax.set_ylabel('G Label')
@@ -47,7 +48,10 @@ def grey_edge_cc(img, minkowski_ord=0.15, grad_ord=3, save_fname_img="default_gr
     img = img.astype(np.float32)
     sobel = np.copy(img)
     for _ in range(grad_ord):
-        sobel = cv2.Sobel(sobel, cv2.CV_64F, 1, 0, ksize=-1)
+        if grad_ord == 1:
+            sobel = cv2.Sobel(sobel, cv2.CV_64F, 1, 0, ksize=-1)
+        else:
+            sobel = cv2.Sobel(sobel, cv2.CV_64F, 1, 0, ksize=0)
 
     sobel = np.abs(sobel)
 
@@ -60,10 +64,12 @@ def grey_edge_cc(img, minkowski_ord=0.15, grad_ord=3, save_fname_img="default_gr
     for chan in range(3):
         k_chan = avg / kai[chan]
         img[:, :, chan] *= k_chan
-    img = np.minimum(img, 255.0)
+    img *= (255.0/img.max())
+    # img = np.minimum(img, 255.0)
     img = np.uint8(img)
 
     imshow(img, save_fname_img)
+    return img
 
 def grey_world_cc(img, save_fname_img="default_greyworld.jpg"):
     """ Perform grey-world color constancy """
@@ -73,37 +79,41 @@ def grey_world_cc(img, save_fname_img="default_greyworld.jpg"):
     for chan in range(3):
         k_chan = avg / img[:, :, chan].mean()
         img[:, :, chan] *= k_chan
-        img[:, :, chan] = np.minimum(img[:, :, chan], 255.0)
+        img *= (255.0/img.max())
+        # img[:, :, chan] = np.minimum(img[:, :, chan], 255.0)
         
     print(img.max(), np.uint8(img.max()))
     img = img.astype(np.uint8)
 
     imshow(img, save_fname_img)
+    return img
 
 def max_rgb_cc(img, save_fname_img="default_maxrgb.jpg"):
     """ Perform max-rgb color constancy """
 
     img = img.astype(float)
-    white_bgr = [255.0, 255.0, 255.0]
+    canon = img.max()
     for chan in range(3):
-        k_chan = white_bgr[0] / img[:, :, chan].max()
+        k_chan = canon / img[:, :, chan].max()
         img[:, :, chan] *= k_chan
-        img[:, :, chan] = np.minimum(img[:, :, chan], 255.0)
+        # img[:, :, chan] = np.minimum(img[:, :, chan], 255.0)
 
+ 
     img = img.astype(np.uint8)
 
     imshow(img, save_fname_img)
+    return img
 
 def main():
     """ Main method used to run a2 """
 
-    fname_img = 'img_2.jpg'
+    fname_img = 'img_1.jpg'
     img = cv2.imread(fname_img, -1)
     imshow(img)
-    # gamutshow(img)
-    # max_rgb_cc(img)
-    # grey_world_cc(img)
-    grey_edge_cc(img, minkowski_ord=6, grad_ord=1)
+    # img = max_rgb_cc(img)
+    # img = grey_world_cc(img)
+    img = grey_edge_cc(img, minkowski_ord=20, grad_ord=1)
+    gamutshow(img)
 
 if __name__ == "__main__":
     main()
