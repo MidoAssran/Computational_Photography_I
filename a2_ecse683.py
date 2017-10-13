@@ -105,15 +105,19 @@ def max_rgb_cc(img, save_fname_img="default_maxrgb.jpg"):
     return img
 
 def main():
-    """ Main method used to run a2 """
+    """
+    Main method used to run a2
+
+    NOTE: To close images, press the 'q' key after they load.
+    """
 
     fname_img = 'img_1.jpg'
     img = cv2.imread(fname_img, -1)
     imshow(img)
-    # img = max_rgb_cc(img)
-    # img = grey_world_cc(img)
-    img = grey_edge_cc(img, minkowski_ord=20, grad_ord=1)
-    gamutshow(img)
+    img = max_rgb_cc(img)
+    img = grey_world_cc(img)
+    img = grey_edge_cc(img, minkowski_ord=0.35, grad_ord=3)
+    # gamutshow(img)
 
 if __name__ == "__main__":
     main()
